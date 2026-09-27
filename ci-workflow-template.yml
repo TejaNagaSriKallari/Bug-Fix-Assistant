@@ -1,0 +1,73 @@
+# -----------------------------------------------------------------------------
+# Bug-Fix Assistant — CI failure hook (Flow B)
+#
+# Copy this into any repo you want covered, at:  .github/workflows/bugfix.yml
+#
+# On a failed build/test it sends the error log to your backend and posts the
+# similar past bugs as a comment on the commit.
+#
+# Prereqs (once per repo, in Settings -> Secrets and variables -> Actions):
+#   BUGFIX_BACKEND_URL   the deployed backend, e.g. https://your-app.onrender.com
+#                        (no trailing /)
+#   BUGFIX_CI_SECRET     this repo's CI key: open the repo on github.com, open the
+#                        Bug-Fix Assistant panel, click "CI key", copy the key.
+#
+# The backend must be publicly reachable (deployed), because GitHub Actions runs
+# in GitHub's cloud and cannot reach localhost.
+# -----------------------------------------------------------------------------
+name: CI with Bug-Fix Assistant
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: write      # needed to comment on the commit
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # ---- your real build/test, with output captured to build.log ----
+      - name: Install & test
+        id: test
+        run: |
+          set -o pipefail
+          # Replace the next two lines with your actual commands:
+          npm ci            2>&1 | tee -a build.log
+          npm test          2>&1 | tee -a build.log
+
+      # ---- on failure: ask the assistant for similar past bugs ----
+      - name: Ask Bug-Fix Assistant
+        if: failure()
+        id: assistant
+        run: |
+          ERR=$(tail -c 4000 build.log)
+          RESP=$(curl -sS -X POST "${{ secrets.BUGFIX_BACKEND_URL }}/api/ci-failure" \
+            -H "content-type: application/json" \
+            -H "x-ci-secret: ${{ secrets.BUGFIX_CI_SECRET }}" \
+            --data "$(jq -n --arg repo "$GITHUB_REPOSITORY" --arg err "$ERR" \
+              '{repo:$repo, errorLog:$err}')")
+          # Save the reply text for the next step
+          echo "$RESP" | jq -r '.reply' > reply.txt
+          echo "has_reply=true" >> "$GITHUB_OUTPUT"
+
+      - name: Comment on commit
+        if: failure() && steps.assistant.outputs.has_reply == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const body = "🐛 **Bug-Fix Assistant**\n\n" + fs.readFileSync('reply.txt', 'utf8');
+            await github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body,
+            });

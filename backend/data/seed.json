@@ -1,0 +1,48 @@
+[
+  {
+    "id": "acme-payments-72",
+    "repo": "acme/payments",
+    "installationId": "inst_1",
+    "problem": "Payment fails when transaction id is missing",
+    "error": "TypeError: payment.id is undefined at PaymentService.ts:42",
+    "rootCause": "Code accessed payment.id before checking the payment object was fully populated",
+    "fix": "Added null/undefined validation before accessing payment.id",
+    "filesChanged": ["PaymentService.ts", "PaymentValidator.ts"],
+    "issueUrl": "https://github.com/acme/payments/issues/72",
+    "prUrl": "https://github.com/acme/payments/pull/75"
+  },
+  {
+    "id": "acme-payments-42",
+    "repo": "acme/payments",
+    "installationId": "inst_1",
+    "problem": "Login crashes when JWT expires",
+    "error": "Error: JWT expired at verifyToken (auth.ts:88)",
+    "rootCause": "Expired token was not handled; verify threw instead of returning 401",
+    "fix": "Added token-expiration handling and a graceful 401 response",
+    "filesChanged": ["auth.ts", "middleware.ts"],
+    "issueUrl": "https://github.com/acme/payments/issues/42",
+    "prUrl": "https://github.com/acme/payments/pull/47"
+  },
+  {
+    "id": "acme-web-15",
+    "repo": "acme/web",
+    "installationId": "inst_1",
+    "problem": "Dashboard shows blank page when the user has no projects",
+    "error": "TypeError: Cannot read properties of null (reading 'map') at Dashboard.tsx:31",
+    "rootCause": "Rendered projects.map before the projects array was loaded",
+    "fix": "Added a loading state and defaulted projects to an empty array",
+    "filesChanged": ["Dashboard.tsx"],
+    "prUrl": "https://github.com/acme/web/pull/18"
+  },
+  {
+    "id": "bob-side-9",
+    "repo": "bob/side-project",
+    "installationId": "inst_2",
+    "problem": "App crashes on startup when the .env file is missing",
+    "error": "Error: DATABASE_URL is not defined",
+    "rootCause": "No validation of required environment variables at boot",
+    "fix": "Added an env schema check at startup that fails with a clear message",
+    "filesChanged": ["config.ts"],
+    "prUrl": "https://github.com/bob/side-project/pull/12"
+  }
+]
