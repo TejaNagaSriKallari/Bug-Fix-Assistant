@@ -6,7 +6,7 @@
   "permissions": ["storage"],
   "host_permissions": [
     "https://github.com/*",
-    "https://YOUR-APP.onrender.com/*"
+    "https://bug-fix-assistant.onrender.com*"
   ],
   "background": {
     "service_worker": "background.js",

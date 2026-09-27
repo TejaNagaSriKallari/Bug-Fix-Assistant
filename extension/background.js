@@ -6,7 +6,7 @@
 
 // Your deployed backend. For local development use "http://localhost:8787"
 // (and add it to host_permissions in manifest.json).
-const BACKEND = "https://YOUR-APP.onrender.com";
+const BACKEND = "https://bug-fix-assistant.onrender.com";
 
 async function getSessionToken() {
   const { sessionToken } = await chrome.storage.local.get("sessionToken");
